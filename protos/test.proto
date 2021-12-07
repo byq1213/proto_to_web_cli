@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+
+package test; //
+
+option java_package = "com.test"; //
+option java_multiple_files = true; //
+
+
+message CreateReq {
+  string jump_url = 1; //跳转url，可选
+  uint32 speed = 10; 
+}
+
+message CreateResp {
+  string result = 1; // 系统的返回码
+  string res_info = 2; //返回信息
+  string id = 3; // ID
+}
+
+
+
+service test_service {
+  rpc create (CreateReq) returns (CreateResp); //推送消息注册
+}
