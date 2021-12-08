@@ -5,11 +5,11 @@
  */
 
 export const <%=keyword%>Api = () => {
-    const baseUrl = <%=base_url%>;
+    const baseUrl = '<%=base_url%>';
     return {
         <% list.forEach(function(item){ %>
-        <%=item.key%>: {
-            url: `${baseUrl}/<%=item.url%>`,
+        <%=item.upper_name%>: {
+            url: `${baseUrl}/<%=item.name%>`,
             desc: '',
         },
       <% })%>

@@ -23,11 +23,12 @@ const fs = require('fs')
 const inquirer = require('inquirer')
 const ejs = require('ejs')
 const moment = require('moment')
-const protobuf = require('protobufjs')
-
+const _ = require('lodash');
 /** Utils */
 const git = require('./utils/git');
-
+const {
+    getService
+} = require('./utils/proto_read')
 /** Template */
 const templateDir = path.join(__dirname, './templates');
 const tempList = path.join(templateDir, './list.vue');
@@ -35,7 +36,8 @@ const tempApi = path.join(templateDir, './api.ts'); // api模板文件
 
 /** Rande */
 const destDir = path.join(__dirname, 'src');
-const destListDir = path.join(destDir, 'list.vue');
+const destLis = path.join(destDir, 'list.vue');
+const destApi = path.join(destDir, 'api.ts')
 
 /** Proto */
 const testProto = path.join(__dirname, 'protos/msg.proto');
@@ -44,25 +46,64 @@ const testProto = path.join(__dirname, 'protos/msg.proto');
 const user = git().user.name
 const time = moment().format("YYYY-MM-DD HH:mm:ss")
 
-
-return ;
+const global = {
+    git_user: user,
+    time,
+    cn_keyword: ''
+}
 inquirer.prompt([{
         type: 'input',
         name: 'keyword',
-        message: 'keyword'
+        message: 'keyword',
+        default: 'test_msg'
     },
-    // {
-    //     type: 'input',
-    //     name: 'cn_keyword',
-    //     message: '中文关键词:'
-    // },
+    {
+        type: 'input',
+        name: 'cn_keyword',
+        message: '中文关键词:',
+        default: 'test_站外消息'
+    },
+    {
+        type: 'input',
+        name: 'proto_path',
+        message: '相关的后台协议:',
+        default: '/Users/Shared/Projects/cli/protos/test.proto'
+
+    },
+
     // {
     //     type: 'input',
     //     name: 'proto',
     //     message: 'propto path: '
     // }
 ]).then(answer => {
-    console.log(answer)
+    // 拿到协议内容
+    if (answer.proto_path || true) {
+        let {
+            methods,
+            package
+        } = getService(answer.proto_path || '/Users/Shared/Projects/cli/protos/test.proto')
+        // 暴露出的接口渲染api文件
+        let methodsList = methods.map(mtd => {
+            // 大写接口名
+            let upperName = _.upperFirst(_.camelCase(mtd));
+            return {
+                upper_name: upperName,
+                name: mtd
+            }
+        });
+        ejs.renderFile(tempApi, {
+            ...global,
+            list: methodsList,
+            base_url: package,
+            keyword: answer.keyword,
+            cn_keyword: answer.cn_keyword,
+        
+        }, (err, str) => {
+            console.log(`err`, err)
+            fs.writeFileSync(destApi, str)
+        })
+    }
     //   ejs.renderFile(vuePath, answer, (err, str)=>{
     //     fs.writeFileSync(vueDestPath, str)
     //   })
