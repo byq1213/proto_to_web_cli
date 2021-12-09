@@ -10,10 +10,25 @@ const authMiddleWare = middleware.smartProxyAuth();
 
 @Middleware(authMiddleWare, 1)
 
-@Route('/api/dps/msg')
-export default class MsgController extends BaseController {
-  @HttpGet('/list')
-  public async list() {
+@Route('/api/dps/<%=keyword%>')
+export default class <%=upper_keyword%>Controller extends BaseController {
 
+<% list.forEach(function(v){%>
+  /** <%=v.name%> */
+  @HttpGet('/<%=v.name%>')
+  public async <%=v.upper_first_name%>() {
+    const { ctx } = this;
+    const {
+      query,
+      request: { body },
+      info: { userName },
+    } = ctx;
+    const { toInt } = ctx.helper;
+
+    const reqUrl = await this.app.apiPool.get('<%=keyword%>/<%=v.upper_name%>');
+    const { data: resData } = await this.app.apiMod.postJSON(reqUrl, body || query);
+    const { retcode, retmsg, data } = resData;
+    ctx.response.std(data, toInt(retcode), retmsg);
   }
+<% }) %>
 }
